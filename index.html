@@ -3688,7 +3688,9 @@
      ========================================================= */
   function send(text) {
     var q = (text || '').trim();
+    console.log('[DEBUG] send() called, q=' + q + ', busy=' + busy);
     if (!q || busy) return;
+    console.log('[DEBUG] send() passed guard, q=' + q);
     countQuestion();
 
     // ===== ردود ثابتة مضمونة (لا تُمرّر للنموذج — دقة 100%) =====
