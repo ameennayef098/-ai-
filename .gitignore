@@ -30,5 +30,4 @@ arkan-ai/stats.json
 *.env
 .env
 
-# Server file (contains API keys in local dev)
-server.py
+# Note: server.py is now safe to deploy (API keys read from environment variables)
