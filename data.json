@@ -35,7 +35,7 @@
         "لماذا نصنّف البيانات؟",
         "من أنشأ هذا الركن؟"
       ],
-      "img": "/arkan/بوسترات/poster-data.png",
+      "img": "/posters/poster-data.png",
       "welcome": "أهلاً! \nانا سايبو مساعدك السبراني\nاختر سؤالاً جاهزاً عن «ركن تنسيق البيانات» أو اكتب سؤالك بنفسك.",
       "code": "بيانات"
     },
@@ -54,7 +54,7 @@
         "كيف أحمي نفسي على شبكة عامة؟",
         "من أنشأ هذا الركن؟"
       ],
-      "img": "/arkan/بوسترات/poster-threats.png",
+      "img": "/posters/poster-threats.png",
       "welcome": "أهلاً! \nانا سايبو مساعدك السبراني\nاختر سؤالاً جاهزاً عن «ركن التهديدات السبراني» أو اكتب سؤالك بنفسك.",
       "code": "تهديدات"
     },
@@ -75,7 +75,7 @@
       ],
       "welcome": "أهلاً! اسألني عن مكالمات الاحتيال، أو جرّب المحاكاة التفاعلية في الركن.",
       "pending": false,
-      "img": "/arkan/بوسترات/poster-calls.png",
+      "img": "/posters/poster-calls.png",
       "code": "مكالمات"
     },
     {
@@ -95,7 +95,7 @@
       ],
       "welcome": "أهلاً! اسألني عن رسائل الاحتيال النصية، أو عن التجربة التفاعلية.",
       "pending": false,
-      "img": "/arkan/بوسترات/poster-sms.png",
+      "img": "/posters/poster-sms.png",
       "code": "رسائل"
     },
     {
@@ -106,7 +106,7 @@
       "full": "",
       "questions": [],
       "pending": true,
-      "img": "/arkan/بوسترات/poster-devices.png",
+      "img": "/posters/poster-devices.png",
       "code": ""
     }
   ],
