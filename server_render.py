@@ -202,10 +202,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                             break
                         try:
                             obj = json.loads(data)
-                            content = obj.get("choices", [{}])[0].get("delta", {}).get("content", "")
+                            choices = obj.get("choices", [])
+                            if not choices:
+                                continue
+                            delta = choices[0].get("delta", {})
+                            content = delta.get("content", "")
                             if content:
                                 yield json.dumps({"message": {"content": content}}) + "\n"
-                        except json.JSONDecodeError:
+                        except (json.JSONDecodeError, IndexError, KeyError):
                             pass
         except Exception as e:
             yield json.dumps({"message": {"content": f"عذراً، حدث خطأ: {str(e)[:100]}"}}) + "\n"
