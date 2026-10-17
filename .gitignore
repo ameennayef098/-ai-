@@ -23,3 +23,12 @@ arkan-ai/tts/*.mp3
 arkan-ai/audio/*.webm
 arkan-ai/audio/*.ogg
 arkan-ai/audio/*.mp3
+
+# Sensitive data (never commit)
+arkan-ai/data.json
+arkan-ai/stats.json
+*.env
+.env
+
+# Server file (contains API keys in local dev)
+server.py
