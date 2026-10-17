@@ -60,7 +60,7 @@ DATA_FILE = os.path.join(BASE_DIR, "arkan-ai", "data.json")
 STATS_FILE = os.path.join(BASE_DIR, "arkan-ai", "stats.json")
 
 SITES = {
-    "/": os.path.join(BASE_DIR, "cyber-threat-observatory"),
+    "/": os.path.join(BASE_DIR, "arkan-ai"),
     "/arkan": os.path.join(BASE_DIR, "arkan-ai"),
 }
 
@@ -1115,7 +1115,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return
 
         # ===== تسجيل الزيارة تلقائياً عند فتح اركان =====
-        if wants_arkan and self.path.split("?")[0] in ("/arkan", "/arkan/", "/arkan/index.html"):
+        if raw_path in ("", "/") and not raw_path.startswith("/arkan"):
+            raw_path = "/index.html"
+            wants_arkan = True
+
+        if wants_arkan and self.path.split("?")[0] in ("/arkan", "/arkan/", "/arkan/index.html", "/"):
             bump_stat("visit")
 
         # تحديد المجلد الأساسي حسب المسار
