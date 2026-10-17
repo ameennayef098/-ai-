@@ -3933,22 +3933,8 @@
           setTimeout(waitTurn, 4000);
         });
     }
-    fetch('/api/queue/join', QOPTS)
-      .then(function (r) { return r.json(); })
-      .then(function (s) {
-        if (done) return;
-        if (s && s.active) { startChat(); }
-        else {
-          bodyEl.innerHTML = '<span class="queue-wait">⏳ أنت في وضع الانتظار — دورك <b>رقم ' +
-            ((s && s.position) || 1) + '</b><span class="queue-sub">الآن ' + ((s && s.active_count) || 0) +
-            ' أجهزة تجاوب · دورك جاي…</span></span>';
-          setTimeout(waitTurn, 1500);
-        }
-      })
-      .catch(function () {
-        // لو السيرفر ما يدعم الطابور (نسخة قديمة) — كمّل عادي
-        startChat();
-      });
+    // النسخة المبسطة (Render): أرسل مباشرة بدون طابور
+    startChat();
   }
 
   /* =========================================================
