@@ -2282,6 +2282,50 @@
     </div>
   </div>
 
+  <!-- ===== صفحة من أنا ===== -->
+  <div class="view hidden" id="viewMe">
+    <div class="me-page">
+      <div class="me-card">
+        <div class="me-header">
+          <div class="me-avatar">👨‍💻</div>
+          <div class="me-title">
+            <h2>أمين الدواغره</h2>
+            <p>مطوّر سايبو ومهتم بالتقنيات المتقدمة</p>
+          </div>
+        </div>
+
+        <div class="me-section">
+          <h3>🏛️ عن سايبو</h3>
+          <p>سايبو (CYBO) هو مساعد ذكاء اصطناعي مبرمج محلياً على جهاز المضيف. المشروع يهدف إلى توفير مساعد ذكي باللغة العربية يعمل بدون إنترنت، يحترم خصوصية المستخدم (كل المحادثات تبقى على الجهاز)، ويصلح للاستخدام في الفصول والمعارض والأندية التقنية. زوار نفس الشبكة يستطيعون الوصول إليه عبر الشبكة المحلية.</p>
+        </div>
+
+        <div class="me-section">
+          <h3>🎯 من أنا؟</h3>
+          <p>أنا أمين الدواغره، مطوّر تقني مهتم بالتكنولوجيا والذكاء الاصطناعي، وصاحب مشاريع سابقة شملت تطوير مواقع وحلول رقمية. أمتلك مهارات متقدمة في توظيف الأدوات التقنية والذكاء الاصطناعي لبناء الأفكار وتحويلها إلى مشاريع عملية، وأتبع منهجية Vibe Coding في تطوير البرمجيات، من خلال الجمع بين التفكير التحليلي، وصياغة التعليمات للنماذج الذكية، وتوجيهها لبناء الحلول البرمجية وتطويرها.</p>
+        </div>
+
+        <div class="me-section">
+          <h3>🚀 رحلتي مع سايبو</h3>
+          <p>بدأت فكرة سايبو (CYBO) بإنشاء مرصد للتهديدات السيبرانية، يقدّم أبرز التهديدات والمخاطر بأساليب تفاعلية تهدف إلى تبسيط المعلومات التقنية وتعزيز الوعي بالأمن السيبراني.</p>
+          <p>ومع تطور الفكرة، اتجهت إلى توسيع إمكانات المشروع عبر دمج الذكاء الاصطناعي في أركانه التعليمية، بهدف تقديم تجربة تفاعلية تتجاوز عرض المعلومات التقليدي.</p>
+          <p>ثم طوّرت مسارًا تعليميًا منظّمًا يمر فيه المستخدم على أركان المرصد، مع إتاحة الحصول على شهادة إتمام بعد استكمال المسار المحدد.</p>
+          <p>كما عملت على تكييف نموذج ذكاء اصطناعي ليتناسب مع المهام السيبرانية المستهدفة في المشروع، في خطوة تهدف إلى تعزيز تخصص سايبو وتوسيع إمكاناته المستقبلية.</p>
+        </div>
+
+        <div class="me-section">
+          <h3>💡 رؤيتي التقنية</h3>
+          <p>أرى أن الذكاء الاصطناعي ليس مجرد أداة للإجابة عن الأسئلة، بل وسيلة لبناء حلول مبتكرة وتطوير تجارب رقمية أكثر فاعلية. لذلك أحرص على استكشاف التقنيات الحديثة، وتجربة الأدوات والنماذج الذكية، وتوظيفها في تطوير مشاريع تجمع بين الفكرة والتصميم والوظيفة.</p>
+          <div class="me-highlight">
+            <p>أطمح إلى مواصلة بناء مشاريع تقنية مبتكرة، وتوسيع قدراتي في تطوير البرمجيات والذكاء الاصطناعي، والمساهمة في توظيف هذه التقنيات في التعليم والتوعية والأمن السيبراني.</p>
+          </div>
+          <p>سايبو هو إحدى محطات رحلتي التقنية، وليس آخرها. فكل فكرة جديدة تمثل فرصة لبناء شيء أكثر تطورًا وأثرًا.</p>
+        </div>
+
+        <a href="/" class="me-back">← رجوع للموقع</a>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== عرض About ===== -->
   <div class="view hidden" id="viewAbout">
     <div class="hero">
@@ -4174,34 +4218,35 @@
        admin   = لوحة الإدارة
        name    = شاشة تسجيل الاسم أول مرة
      ========================================================= */
-  /* ===== التنقل بين العرضين ===== */
-  function showView(name) {
-    var isChat = name === 'chat';
-    var isAbout = name === 'about';
-    var isAdmin = name === 'admin';
-    var isName = name === 'name';
-    var isBattle = name === 'battle';
-    var isHub = name === 'hub';
-    viewChat.classList.toggle('hidden', !isChat);
-    viewAbout.classList.toggle('hidden', !isAbout);
-    viewCorners.classList.toggle('hidden', isChat || isAbout || isAdmin || isName || isBattle || isHub);
-    viewAdmin.classList.toggle('hidden', !isAdmin);
-    viewName.classList.toggle('hidden', !isName);
-    viewBattle.classList.toggle('hidden', !isBattle);
-    viewHub.classList.toggle('hidden', !isHub);
+    /* ===== التنقل بين العرضين ===== */
+    function showView(name) {
+      var isChat = name === 'chat';
+      var isAbout = name === 'about';
+      var isAdmin = name === 'admin';
+      var isName = name === 'name';
+      var isBattle = name === 'battle';
+      var isHub = name === 'hub';
+      var isMe = name === 'me';  // إضافة لتفعيل عرض من أنا
+      viewChat.classList.toggle('hidden', !isChat);
+      viewAbout.classList.toggle('hidden', !isAbout);
+      viewCorners.classList.toggle('hidden', isChat || isAbout || isAdmin || isName || isBattle || isHub || isMe);
+      viewAdmin.classList.toggle('hidden', !isAdmin);
+      viewName.classList.toggle('hidden', !isName);
+      viewBattle.classList.toggle('hidden', !isBattle);
+      viewHub.classList.toggle('hidden', !isHub);
 
-    var viewMe = document.getElementById('viewMe');
+      var viewMe = document.getElementById('viewMe');
 
-    if (viewMe) viewMe.classList.toggle('hidden', !isMe);
-    navChat.classList.toggle('active', isChat);
-    navAbout.classList.toggle('active', isAbout);
-    navBattle.classList.toggle('active', isBattle);
-    navCorners.classList.toggle('active', !isChat && !isAbout && !isAdmin && !isName && !isBattle && !isHub);
+      if (viewMe) viewMe.classList.toggle('hidden', !isMe);
+      navChat.classList.toggle('active', isChat);
+      navAbout.classList.toggle('active', isAbout);
+      navBattle.classList.toggle('active', isBattle);
+      navCorners.classList.toggle('active', !isChat && !isAbout && !isAdmin && !isName && !isBattle && !isHub && !isMe);
 
-    var navMe = document.getElementById('navMe');
+      var navMe = document.getElementById('navMe');
 
-    if (navMe) navMe.classList.toggle('active', isMe);
-  }
+      if (navMe) navMe.classList.toggle('active', isMe);
+    }
   navChat.addEventListener('click', function () {
     currentCorner = null;
     renderSuggestions();
