@@ -5299,6 +5299,10 @@
     document.getElementById('chatSub').textContent = currentCorner.short;
     renderSuggestions();
     showView('chat');
+    var navChatBtn = document.getElementById('navChatBtn');
+    var navCornersBtn = document.getElementById('navCornersBtn');
+    if (navChatBtn) navChatBtn.classList.add('active');
+    if (navCornersBtn) navCornersBtn.classList.remove('active');
   }
 
   // ===== أزرار نافذة الاختيار: صوتي / نصي =====
