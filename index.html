@@ -3822,11 +3822,7 @@
     }
 
     var payload = {
-      model: MODEL,
-      messages: [{ role: 'system', content: sysContent }].concat(recent),
-      stream: true,
-      keep_alive: KEEP_ALIVE,
-      options: { temperature: 0.5, num_predict: 260, num_ctx: 2048, top_p: 0.9, repeat_penalty: 1.1 }
+      messages: [{ role: 'system', content: sysContent }].concat(recent)
     };
 
     var done = false;

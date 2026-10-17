@@ -130,10 +130,26 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if path == "/api/chat":
             length = int(self.headers.get("Content-Length", 0))
             body = json.loads(self.rfile.read(length))
-            msg = body.get("message", "")
-            history = body.get("history", [])
-            reply = self._nvidia_chat(msg, history)
-            self._json({"reply": reply})
+            # يدعم صيغتين: {message, history} أو {messages}
+            if "messages" in body:
+                messages = body["messages"]
+            else:
+                msg = body.get("message", "")
+                history = body.get("history", [])
+                messages = [{"role": "system", "content": "أنت سايبو، مساعد ذكي للأمن السيبراني. أجب بالعربية وبشكل مختصر."}]
+                for h in history[-5:]:
+                    messages.append({"role": "user" if h.get("role") == "user" else "assistant", "content": h.get("content", "")})
+                messages.append({"role": "user", "content": msg})
+            self.send_response(200)
+            self.send_header("Content-Type", "application/x-ndjson")
+            self.send_header("Transfer-Encoding", "chunked")
+            self.end_headers()
+            for chunk in self._nvidia_chat_stream(messages):
+                data = chunk.encode("utf-8")
+                self.wfile.write(("%X\r\n" % len(data)).encode() + data + b"\r\n")
+                self.wfile.flush()
+            self.wfile.write(b"0\r\n\r\n")
+            self.wfile.flush()
             return
 
         if path == "/api/tts":
@@ -167,9 +183,35 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
         self._json({"error": "not found"}, 404)
 
-    def _nvidia_chat(self, msg, history):
+    def _nvidia_chat_stream(self, messages):
+        """يرسل لـ NVIDIA NIM بـ streaming ويعيد NDJSON (Ollama format)"""
         if not NVIDIA_API_KEY:
-            return "عذراً، الذكاء الاصطناعي غير مفعل."
+            yield json.dumps({"message": {"content": "عذراً، الذكاء الاصطناعي غير مفعل."}}) + "\n"
+            return
+        payload = {"model": NVIDIA_MODEL, "messages": messages, "stream": True, **NVIDIA_EXTRA}
+        req = urllib.request.Request(NVIDIA_URL, data=json.dumps(payload).encode("utf-8"), method="POST")
+        req.add_header("Authorization", "Bearer " + NVIDIA_API_KEY)
+        req.add_header("Content-Type", "application/json")
+        try:
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                for line in resp:
+                    line = line.decode("utf-8").strip()
+                    if line.startswith("data: "):
+                        data = line[6:]
+                        if data == "[DONE]":
+                            break
+                        try:
+                            obj = json.loads(data)
+                            content = obj.get("choices", [{}])[0].get("delta", {}).get("content", "")
+                            if content:
+                                yield json.dumps({"message": {"content": content}}) + "\n"
+                        except json.JSONDecodeError:
+                            pass
+        except Exception as e:
+            yield json.dumps({"message": {"content": f"عذراً، حدث خطأ: {str(e)[:100]}"}}) + "\n"
+
+    def _nvidia_chat(self, msg, history):
+        """نسخة غير streaming (للتوافق مع الـ frontend القديم)"""
         messages = [{"role": "system", "content": "أنت سايبو، مساعد ذكي للأمن السيبراني. أجب بالعربية وبشكل مختصر."}]
         for h in history[-5:]:
             messages.append({"role": "user" if h.get("role") == "user" else "assistant", "content": h.get("content", "")})
