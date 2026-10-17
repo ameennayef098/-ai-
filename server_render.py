@@ -14,7 +14,7 @@ except Exception:
 
 PORT = int(os.environ.get("PORT", 8080))
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-SITE_DIR = os.path.join(BASE_DIR, "arkan-ai")
+SITE_DIR = BASE_DIR
 
 # ===== NVIDIA NIM API =====
 NVIDIA_API_KEY = os.environ.get("NVIDIA_API_KEY", "")
@@ -31,10 +31,10 @@ ELEVENLABS_URL = "https://api.elevenlabs.io/v1/text-to-speech/" + ELEVENLABS_VOI
 ELEVENLABS_URL_FRAUD = "https://api.elevenlabs.io/v1/text-to-speech/" + ELEVENLABS_VOICE_FRAUD
 ELEVENLABS_STT_MODEL = "scribe_v1"
 ELEVENLABS_STT_URL = "https://api.elevenlabs.io/v1/speech-to-text"
-TTS_DIR = os.path.join(SITE_DIR, "tts")
+TTS_DIR = os.path.join(BASE_DIR, "arkan-ai", "tts")
 
-DATA_FILE = os.path.join(SITE_DIR, "data.json")
-STATS_FILE = os.path.join(SITE_DIR, "stats.json")
+DATA_FILE = os.path.join(BASE_DIR, "arkan-ai", "data.json")
+STATS_FILE = os.path.join(BASE_DIR, "arkan-ai", "stats.json")
 
 DEFAULT_DATA = {
     "corners": [
