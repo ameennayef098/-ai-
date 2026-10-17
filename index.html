@@ -8,10 +8,10 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="سايبو CYBO — المساعد السيبراني الذكي">
 <meta property="og:description" content="مساعد سيبراني ذكي يجيب على أسئلة الزوار حول معرض مرصد التهديدات السيبرانية.">
-<meta property="og:image" content="/arkan/logo-icon.png">
+<meta property="og:image" content="/logo-icon.png">
 <meta name="twitter:card" content="summary_large_image">
 <title>سايبو CYBO — المساعد السيبراني الذكي</title>
-<link rel="icon" type="image/png" href="/arkan/logo-icon.png">
+<link rel="icon" type="image/png" href="/logo-icon.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
 <style>
 /* ============================================================================
@@ -2085,7 +2085,7 @@
 
 <header class="topbar">
   <a href="#" class="brand">
-    <div class="brand-logo"><img src="/arkan/logo-icon.png" alt="سايبو"></div>
+    <div class="brand-logo"><img src="/logo-icon.png" alt="سايبو"></div>
     <div>
       <div class="brand-title">سايبو <span class="en">CYBO</span></div>
       <div class="brand-sub">المساعد السيبراني الذكي</div>
@@ -2099,7 +2099,7 @@
   <button class="nav-btn active" id="navCorners">الأركان</button>
   <button class="nav-btn" id="navChat">🛡️ دردش مع سايبو</button>
   <button class="nav-btn" id="navAbout">عن الموقع</button>
-  <a href="/arkan/me.html" class="nav-btn" style="text-decoration:none;">👤 من أنا</a>
+  <a href="/me.html" class="nav-btn" style="text-decoration:none;">👤 من أنا</a>
   <button class="nav-btn" id="navBattle">⚔️ معركة الذكاء</button>
   <span class="visitor-chip hidden" id="visitorChip">
     <span>👤 <b id="visitorName">—</b></span>
@@ -2214,7 +2214,7 @@
     <!-- بطاقة QR للدخول السريع -->
     <div class="qr-card hidden" id="qrCard">
       <div class="qr-box">
-        <img src="/arkan/qr.svg" alt="رمز QR للدخول لموقع سايبو" id="qrImg">
+        <img src="/qr.svg" alt="رمز QR للدخول لموقع سايبو" id="qrImg">
       </div>
       <div class="qr-info">
         <h2>📱 افتح سايبو من موبايلك</h2>
@@ -2230,7 +2230,7 @@
       <button class="nav-btn" id="navChatBtn" data-view="chat">🛡️ دردش مع سايبو</button>
       <button class="nav-btn" id="navAboutBtn" data-view="about">ℹ️ عن الموقع</button>
       <button class="nav-btn" id="navBattleBtn" data-view="battle">⚔️ معركة الذكاء</button>
-      <a href="/arkan/me.html" class="nav-btn" style="text-decoration:none;">👤 من أنا</a>
+      <a href="/me.html" class="nav-btn" style="text-decoration:none;">👤 من أنا</a>
     </div>
     <!-- شريط الإحصائيات الحيّة -->
     <div class="stats-bar" id="statsBar"></div>
@@ -2957,7 +2957,7 @@
       ],
       welcome: 'أهلاً! اسألني عن مكالمات الاحتيال، أو جرّب المحاكاة التفاعلية في الركن.',
       pending: false,
-      img: '/arkan/بوسترات/poster-calls.png'
+      img: '/posters/poster-calls.png'
     },
     {
       id: 'sms',
@@ -2981,7 +2981,7 @@
       ],
       welcome: 'أهلاً! اسألني عن رسائل الاحتيال النصية، أو عن التجربة التفاعلية.',
       pending: false,
-      img: '/arkan/بوسترات/poster-sms.png'
+      img: '/posters/poster-sms.png'
     },
     { id: 'c6', title: 'الركن السادس', authors: [], short: 'قيد الإعداد.', full: '', questions: [], pending: true, img: '' }
   ];
@@ -3015,7 +3015,7 @@
   }
 
   // اجلب النسخة المشتركة من السيرفر وحمّل الأركان + About منها
-  fetch('/api/data')
+  fetch('data.json')
     .then(function (r) { return r.ok ? r.json() : null; })
     .then(function (d) {
       var local = readLocalCorners();
