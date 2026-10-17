@@ -31,10 +31,9 @@ ELEVENLABS_URL = "https://api.elevenlabs.io/v1/text-to-speech/" + ELEVENLABS_VOI
 ELEVENLABS_URL_FRAUD = "https://api.elevenlabs.io/v1/text-to-speech/" + ELEVENLABS_VOICE_FRAUD
 ELEVENLABS_STT_MODEL = "scribe_v1"
 ELEVENLABS_STT_URL = "https://api.elevenlabs.io/v1/speech-to-text"
-TTS_DIR = os.path.join(BASE_DIR, "arkan-ai", "tts")
-
-DATA_FILE = os.path.join(BASE_DIR, "arkan-ai", "data.json")
-STATS_FILE = os.path.join(BASE_DIR, "arkan-ai", "stats.json")
+TTS_DIR = os.path.join(BASE_DIR, "tts")
+DATA_FILE = os.path.join(BASE_DIR, "data.json")
+STATS_FILE = os.path.join(BASE_DIR, "stats.json")
 
 DEFAULT_DATA = {
     "corners": [
@@ -112,6 +111,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
         if path == "/api/data":
             self._json(load_data())
+            return
+
+        if path == "/api/tags":
+            self._json({"models": []})
             return
 
         if path == "/api/stats":
