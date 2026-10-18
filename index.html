@@ -237,28 +237,6 @@
     100% { background-position: 200% 0; }
   }
 
-  /* Confetti particle */
-  .confetti {
-    position: fixed;
-    width: 10px;
-    height: 10px;
-    background: var(--cyan);
-    opacity: 0.8;
-    animation: confettiFall 3s ease-out forwards;
-    pointer-events: none;
-    z-index: 9999;
-  }
-
-  @keyframes confettiFall {
-    0% {
-      transform: translateY(-10vh) rotate(0deg);
-      opacity: 1;
-    }
-    100% {
-      transform: translateY(100vh) rotate(720deg);
-      opacity: 0;
-    }
-  }
 
   body {
     font-family: 'Segoe UI', Tahoma, 'Noto Kufi Arabic', 'Cairo', sans-serif;
@@ -2599,7 +2577,7 @@
 
 <footer class="footer">
   <span>سايبو <b>CYBO</b> — المساعد السيبراني الذكي · نموذج <b>مبرمج محلياً</b> على جهاز المضيف</span>
-  <span><a id="footAbout">عن الموقع</a> · برمجة: <b>الطالب أمين نايف دواغره</b></span>
+  <span><a id="footAbout">عن الموقع</a> · برمجة: <b>الطالب الأمين نايف دواغره</b></span>
 </footer>
 
 <script defer>
@@ -2720,7 +2698,6 @@
       if (newTxt) localStorage.setItem('arkant-theme-text', newTxt);
       applyThemeVars(newBg, newTxt);
       markThemeSelected();
-      celebrate();
     } catch (e) {}
   }
   function resetTheme() {
@@ -2730,7 +2707,6 @@
       document.documentElement.style.setProperty('--theme-bg', 'var(--bg-deep)');
       document.documentElement.style.setProperty('--theme-text', 'var(--text)');
       markThemeSelected();
-      celebrate();
     } catch (e) {}
   }
 
@@ -3287,7 +3263,6 @@
         wrap.classList.remove('hidden');
         setTimeout(function () { wrap.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 300);
       }
-      try { celebrate(); } catch (e) {}
     }
   }
 
@@ -3516,13 +3491,11 @@
     viewName.classList.add('hidden');
     showView('corners');
     // Celebrate skipping name registration
-    celebrate();
   });
   document.getElementById('visitorChange').addEventListener('click', function () {
     visitorInput.value = visitorName;
     showView('name');
     // Celebrate name change
-    celebrate();
   });
 
   bumpStat('visit');
@@ -4729,7 +4702,6 @@
     setTimeout(function () { 
       f.remove();
       // Celebrate successful export
-      celebrate();
     }, 1000);
   });
 
@@ -4747,7 +4719,6 @@
         renderAdminStats();
         renderStats();
         // Celebrate successful reset
-        celebrate();
       })
       .catch(function () {
         admReset.textContent = '🗑️ حذف كل الإحصائيات';
@@ -4762,28 +4733,6 @@
     if (!el) return;
     el.classList.add('show');
     setTimeout(function () { el.classList.remove('show'); }, 1400);
-  }
-
-  /* ===== تأثير coriander (confetti) للاحتفال ===== */
-  function celebrate() {
-    const colors = ['#22d3ee', '#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b'];
-    const confettiCount = 50;
-    
-    for (let i = 0; i < confettiCount; i++) {
-      const confetti = document.createElement('div');
-      confetti.className = 'confetti';
-      confetti.style.left = Math.random() * 100 + 'vw';
-      confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-      confetti.style.animationDelay = Math.random() * 3 + 's';
-      confetti.style.width = Math.random() * 8 + 4 + 'px';
-      confetti.style.height = confetti.style.width;
-      document.body.appendChild(confetti);
-      
-      // Remove confetti after animation ends
-      setTimeout(() => {
-        confetti.remove();
-      }, 3000);
-    }
   }
 
   /* ===== بناء محرر الأركان ===== */
@@ -4861,6 +4810,69 @@
     imgWrap.appendChild(fileInput);   // لازم يكون في الـDOM حتى يشتغل file picker
     imgWrap.appendChild(imgRow);
     card.appendChild(imgWrap);
+    // ---- التسجيل الصوتي للركن ----
+    var audioLabel = document.createElement("label");
+    audioLabel.className = "admin-label";
+    audioLabel.textContent = "التسجيل الصوتي للركن (MP3/WAV)";
+    card.appendChild(audioLabel);
+    
+    var audioRow = document.createElement("div");
+    audioRow.className = "admin-audio-row";
+    var audioPlayBtn = document.createElement("button");
+    audioPlayBtn.className = "admin-audio-btn";
+    audioPlayBtn.textContent = c.audioSummary ? "▶ تشغيل" : "لا يوجد تسجيل";
+    audioPlayBtn.disabled = !c.audioSummary;
+    audioRow.appendChild(audioPlayBtn);
+    var audioBtn = document.createElement("button");
+    audioBtn.className = "admin-audio-btn";
+    audioBtn.textContent = c.audioSummary ? "تغيير التسجيل" : "رفع تسجيل";
+    var audioDelBtn = document.createElement("button");
+    audioDelBtn.className = "admin-audio-btn danger";
+    audioDelBtn.textContent = "حذف";
+    audioDelBtn.style.display = c.audioSummary ? "" : "none";
+    var audioStatus = document.createElement("span");
+    audioStatus.className = "admin-audio-status";
+    audioStatus.textContent = c.audioSummary ? "التسجيل جاهز" : "بدون تسجيل";
+    
+    var audioInput = document.createElement("input");
+    audioInput.type = "file";
+    audioInput.accept = "audio/*";
+    audioInput.hidden = true;
+    
+    audioBtn.addEventListener("click", function () { audioInput.click(); });
+    audioInput.addEventListener("change", function (e) {
+      var f = e.target.files && e.target.files[0];
+      if (!f) return;
+      var reader = new FileReader();
+      reader.onload = function (ev) {
+        c.audioSummary = ev.target.result;
+        saveCorners();
+        buildAdminCorners();
+        renderCorners();
+        flashSaved(card);
+      };
+      reader.readAsDataURL(f);
+      audioInput.value = "";
+    });
+    audioDelBtn.addEventListener("click", function () {
+      if (c.audioSummary && !confirm("حذف التسجيل الصوتي؟")) return;
+      c.audioSummary = "";
+      saveCorners();
+      buildAdminCorners();
+      renderCorners();
+    });
+    audioPlayBtn.addEventListener("click", function () {
+      if (!c.audioSummary) return;
+      var player = new Audio(c.audioSummary);
+      player.play();
+    });
+    
+    audioRow.appendChild(audioBtn);
+    audioRow.appendChild(audioDelBtn);
+    audioRow.appendChild(audioStatus);
+    card.appendChild(audioRow);
+    card.appendChild(audioInput);
+    
 
     // ---- اسم الركن ----
     card.appendChild(mkField('اسم الركن', c.title, 'text', function (v) { c.title = v; }));
@@ -5083,7 +5095,6 @@
         onChange(el.value);
         saveCorners();
         // Celebrate successful save
-        celebrate();
         renderCorners();
       }, 700);
     });
@@ -5132,7 +5143,6 @@
         saveStore(s);
         applyAbout();
         // Celebrate successful save
-        celebrate();
       }, 700);
     });
   }
@@ -5150,7 +5160,6 @@
     CORNERS = JSON.parse(JSON.stringify(DEFAULT_CORNERS));
     saveCorners();
     // Celebrate successful reset
-    celebrate();
     buildAdminCorners();
     renderCorners();
   });
@@ -5212,7 +5221,7 @@
         // Celebrate stats update (subtle)
         if (visits > 0 || questions > 0 || registered > 0) {
           // Small celebration for activity
-          setTimeout(celebrate, 100);
+
         }
       })
       .catch(function () {
@@ -5502,7 +5511,6 @@
     localStorage.setItem('darkMode', darkMode);
     
     // Celebrate theme change
-    celebrate();
     
     // Add a subtle pulse effect
     themeToggle.animate([
