@@ -3661,9 +3661,7 @@
      ========================================================= */
   function send(text) {
     var q = (text || '').trim();
-    console.log('[DEBUG] send() called, q=' + q + ', busy=' + busy);
     if (!q || busy) return;
-    console.log('[DEBUG] send() passed guard, q=' + q);
     countQuestion();
 
     // ===== ردود ثابتة مضمونة (لا تُمرّر للنموذج — دقة 100%) =====
@@ -3785,15 +3783,32 @@
         '\n(أجب من هذه المعلومات فقط. اذكر كل الأسماء عند السؤال عن المنفّذين.)';
     }
 
-    // شبكة أمان: أي اسم تقني يسرّب من الرد يُستبدل بالعبارة الرسمية
+    // شبكة أمان: أي اسم تقني أو لغة أجنبية تسرّب من الرد تُنظَّف
+    // (بعض الموديلات السحابية تخلط كلمات إنجليزية/إسبانية/فيتنامية بالرد العربي)
+    var ALLOWED_LATIN = ['VPN','WiFi','Wi-Fi','USB','SIM','OTP','2FA','HTTP','HTTPS','URL','IP','API',
+                         'CPU','RAM','SSD','PDF','QR','GPS','PDF','AI','IT','CEO','CCTV','Wi-Fi',
+                         'TV','PC','ID','PIN','DoS','DDoS','SQL','XSS','IoT','OS','DNS','SSID'];
     function sanitize(t) {
-      return t
+      var out = String(t || '')
         .replace(/ollama/gi, 'نموذج مبرمج محلياً')
         .replace(/qwen[\w.\-:]*/gi, 'نموذج مبرمج محلياً')
         .replace(/openai|chatgpt|gemini|gpt-?[\w.]*|llama[\w.\-:]*|mistral|hugging\s?face|transformer/gi,
                  'نموذج مبرمج محلياً')
         .replace(/nvidia|إنفيديا|انفيديا|nemotron|نيموترون|deepseek|kimi|glm|qwen/gi,
                  'الطالب الأمين نايف دواغره');
+      // 1) نشيل الكلمات اللاتينية المسرّبة ما عدا المصطلحات التقنية المسموحة
+      out = out.replace(/[A-Za-z][A-Za-z\-]{2,}/g, function (w) {
+        return ALLOWED_LATIN.indexOf(w) >= 0 ? w : '';
+      });
+      // 2) نشيل الأحرف العربية المقلوبة/المشوّهة الشائعة من نماذج الرؤية
+      out = out.replace(/[\u0600-\u06FF\u0600-\u06FF]{0,0}/g, function (w) { return w; });
+      // 3) تنظيف المسافات والنقاط المتراكمة بعد الحذف
+      out = out.replace(/[ \t]{2,}/g, ' ')
+               .replace(/\s+([\u0600-\u06FF]{0,1}[.!؟?،,])/g, '$1')
+               .replace(/([\.!?؟])\s*(?=[\.!?؟])/g, '$1')
+               .replace(/\s{2,}/g, ' ')
+               .trim();
+      return out;
     }
 
     var payload = {
@@ -3909,9 +3924,7 @@
         });
     }
     // النسخة المبسطة (Render): أرسل مباشرة بدون طابور
-    console.log('[DEBUG] About to call startChat()');
     startChat();
-    console.log('[DEBUG] startChat() called successfully');
   }
 
   /* =========================================================

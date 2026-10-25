@@ -35,11 +35,43 @@ PORT = int(os.environ.get("PORT", 8080))
 OLLAMA = "http://127.0.0.1:11434"
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+def load_env():
+    """يقرأ .env المحلي للمفاتيح (احتياط عند التشغيل اليدوي).
+    على Render تُقرأ المفاتيح من Environment Variables مباشرة.
+    ملف .env موجود في .gitignore — لا يُرفع أبداً إلى GitHub.
+    ملاحظة: لا يمسح أي متغير موجود مسبقاً في البيئة (setdefault) ولا يكتب قيماً فارغة."""
+    path = os.path.join(BASE_DIR, ".env")
+    if not os.path.exists(path):
+        return
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                k, v = line.split("=", 1)
+                k = k.strip()
+                v = v.strip()
+                if k and v:
+                    os.environ.setdefault(k, v)
+    except Exception:
+        pass
+
+load_env()
+
+
 # ===== NVIDIA NIM API (سحابي — سريع) =====
 NVIDIA_API_KEY = os.environ.get("NVIDIA_API_KEY", "")
-NVIDIA_MODEL = "nvidia/nemotron-3-super-120b-a12b"
+NVIDIA_MODEL = "nvidia/nemotron-3.5-bolt-e4b"   # الأسرع + عربي نقي (تم قياسه: 1.0-1.3s للرد كاملاً)
 NVIDIA_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
 NVIDIA_EXTRA = {"chat_template_kwargs": {"enable_thinking": False}}
+# قائمة البدائل: لو الموديل الأساسي غير متاح على المفتاح (404) نجرب التالي تلقائياً
+NVIDIA_FALLBACKS = [
+    "nvidia/nemotron-3-ultra-550b-a55b",          # ردود أطول وأغنى (مصطلحات مثل Smishing/2FA)
+    "nvidia/nemotron-3.5-lightning-30b-a3b",      # بديل سريع
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+    "openai/gpt-oss-20b",
+]
 
 # ===== ElevenLabs API (نص → صوت عربي طبيعي) =====
 # المفتاح: صلاحيات tts + speech_to_text (بدون voices_read/models_read)
@@ -363,6 +395,42 @@ def queue_heartbeat(client_id):
             e["last_seen"] = now
         return {"ok": bool(e)}
 
+def _nvidia_models():
+    """قائمة الموديلات بترتيب الأفضلية: الأساسي ثم البدائل (بدون تكرار)."""
+    seen = []
+    for mdl in [NVIDIA_MODEL] + list(NVIDIA_FALLBACKS):
+        if mdl and mdl not in seen:
+            seen.append(mdl)
+    return seen
+
+
+def _nvidia_chat_impl(messages, stream=True, temperature=None, top_p=None, max_tokens=None):
+    """يرسل الرسائل لأول موديل متاح (الأساسي ثم البدائل).
+    يعيد (اسم الموديل، كائن الاستجابة)، أو يثير استثناءً لو فشلت كلها."""
+    last_err = None
+    for model in _nvidia_models():
+        payload = {"model": model, "messages": messages, "stream": stream}
+        if temperature is not None:
+            payload["temperature"] = temperature
+        if top_p is not None:
+            payload["top_p"] = top_p
+        if max_tokens is not None:
+            payload["max_tokens"] = max_tokens
+        payload.update(NVIDIA_EXTRA)
+        try:
+            req = urllib.request.Request(NVIDIA_URL, data=json.dumps(payload).encode("utf-8"), method="POST")
+            req.add_header("Authorization", "Bearer " + NVIDIA_API_KEY)
+            req.add_header("Content-Type", "application/json")
+            req.add_header("Accept", "text/event-stream")
+            resp = urllib.request.urlopen(req, timeout=60)
+            return model, resp
+        except Exception as e:
+            last_err = e
+            continue
+    raise RuntimeError("NVIDIA models failed: " + str(last_err))
+
+
+
 class Handler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):
         # CORS: يسمح لأي جهاز على الشبكة بالاتصال
@@ -386,21 +454,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 messages = [{"role": "user", "content": data["prompt"]}]
             # خيارات Ollama → OpenAI
             opts = data.get("options", {}) or {}
-            nv_req = {
-                "model": NVIDIA_MODEL,
-                "messages": messages,
-                "temperature": opts.get("temperature", 0.5),
-                "top_p": opts.get("top_p", 0.9),
-                "max_tokens": opts.get("num_predict", 300),
-                "stream": True
-            }
-            nv_req.update(NVIDIA_EXTRA)
-            nv_body = json.dumps(nv_req).encode("utf-8")
-            req = urllib.request.Request(NVIDIA_URL, data=nv_body, method="POST")
-            req.add_header("Authorization", "Bearer " + NVIDIA_API_KEY)
-            req.add_header("Content-Type", "application/json")
-            req.add_header("Accept", "text/event-stream")
-            resp = urllib.request.urlopen(req, timeout=15)
+            # نجرّب الموديل الأساسي ثم البدائل — أول واحد يرد يُستخدم
+            used_model, resp = _nvidia_chat_impl(
+                messages, stream=True,
+                temperature=opts.get("temperature"),
+                top_p=opts.get("top_p"),
+                max_tokens=opts.get("num_predict"))
             # بثّ الرد بصيغة Ollama NDJSON حتى الواجهة تفهمه
             self.send_response(200)
             self.send_header("Content-Type", "application/x-ndjson")

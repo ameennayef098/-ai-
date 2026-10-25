@@ -14,13 +14,45 @@ except Exception:
 
 PORT = int(os.environ.get("PORT", 8080))
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+def load_env():
+    """يقرأ .env المحلي للمفاتيح (احتياط عند التشغيل اليدوي).
+    على Render تُقرأ المفاتيح من Environment Variables مباشرة.
+    ملف .env موجود في .gitignore — لا يُرفع أبداً إلى GitHub.
+    ملاحظة: لا يمسح أي متغير موجود مسبقاً في البيئة (setdefault) ولا يكتب قيماً فارغة."""
+    path = os.path.join(BASE_DIR, ".env")
+    if not os.path.exists(path):
+        return
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                k, v = line.split("=", 1)
+                k = k.strip()
+                v = v.strip()
+                if k and v:
+                    os.environ.setdefault(k, v)
+    except Exception:
+        pass
+
+load_env()
+
 SITE_DIR = BASE_DIR
 
 # ===== NVIDIA NIM API =====
 NVIDIA_API_KEY = os.environ.get("NVIDIA_API_KEY", "")
-NVIDIA_MODEL = "nvidia/nemotron-3-super-120b-a12b"
+NVIDIA_MODEL = "nvidia/nemotron-3.5-bolt-e4b"   # الأسرع + عربي نقي (تم قياسه: 1.0-1.3s للرد كاملاً)
 NVIDIA_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
 NVIDIA_EXTRA = {"chat_template_kwargs": {"enable_thinking": False}}
+# قائمة البدائل: لو الموديل الأساسي غير متاح على المفتاح (404) نجرب التالي تلقائياً
+NVIDIA_FALLBACKS = [
+    "nvidia/nemotron-3-ultra-550b-a55b",          # ردود أطول وأغنى (مصطلحات مثل Smishing/2FA)
+    "nvidia/nemotron-3.5-lightning-30b-a3b",      # بديل سريع
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+    "openai/gpt-oss-20b",
+]
 
 # ===== ElevenLabs API =====
 ELEVENLABS_API_KEY = os.environ.get("ELEVENLABS_API_KEY", "")
@@ -184,33 +216,31 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self._json({"error": "not found"}, 404)
 
     def _nvidia_chat_stream(self, messages):
-        """يرسل لـ NVIDIA NIM بـ streaming ويعيد NDJSON (Ollama format)"""
+        """يرسل لـ NVIDIA NIM بـ streaming ويعيد NDJSON (Ollama format).
+        يجرّب الموديل الأساسي ثم البدائل تلقائياً حتى يرد واحد منها."""
         if not NVIDIA_API_KEY:
             yield json.dumps({"message": {"content": "عذراً، الذكاء الاصطناعي غير مفعل."}}) + "\n"
             return
-        payload = {"model": NVIDIA_MODEL, "messages": messages, "stream": True, **NVIDIA_EXTRA}
-        req = urllib.request.Request(NVIDIA_URL, data=json.dumps(payload).encode("utf-8"), method="POST")
-        req.add_header("Authorization", "Bearer " + NVIDIA_API_KEY)
-        req.add_header("Content-Type", "application/json")
         try:
-            with urllib.request.urlopen(req, timeout=30) as resp:
-                for line in resp:
-                    line = line.decode("utf-8").strip()
-                    if line.startswith("data: "):
-                        data = line[6:]
-                        if data == "[DONE]":
-                            break
-                        try:
-                            obj = json.loads(data)
-                            choices = obj.get("choices", [])
-                            if not choices:
-                                continue
-                            delta = choices[0].get("delta", {})
-                            content = delta.get("content", "")
-                            if content:
-                                yield json.dumps({"message": {"content": content}}) + "\n"
-                        except (json.JSONDecodeError, IndexError, KeyError):
-                            pass
+            used_model, resp = _nvidia_chat_impl(messages, stream=True)
+            for line in resp:
+                line = line.decode("utf-8").strip()
+                if line.startswith("data: "):
+                    data = line[6:]
+                    if data == "[DONE]":
+                        break
+                    try:
+                        obj = json.loads(data)
+                        choices = obj.get("choices", [])
+                        if not choices:
+                            continue
+                        delta = choices[0].get("delta", {})
+                        content = delta.get("content", "")
+                        if content:
+                            yield json.dumps({"message": {"content": content}}) + "\n"
+                    except (json.JSONDecodeError, IndexError, KeyError):
+                        pass
+            resp.close()
         except Exception as e:
             yield json.dumps({"message": {"content": f"عذراً، حدث خطأ: {str(e)[:100]}"}}) + "\n"
 
@@ -220,14 +250,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         for h in history[-5:]:
             messages.append({"role": "user" if h.get("role") == "user" else "assistant", "content": h.get("content", "")})
         messages.append({"role": "user", "content": msg})
-        payload = {"model": NVIDIA_MODEL, "messages": messages, **NVIDIA_EXTRA}
-        req = urllib.request.Request(NVIDIA_URL, data=json.dumps(payload).encode("utf-8"), method="POST")
-        req.add_header("Authorization", "Bearer " + NVIDIA_API_KEY)
-        req.add_header("Content-Type", "application/json")
         try:
-            with urllib.request.urlopen(req, timeout=30) as resp:
-                result = json.loads(resp.read())
-                return result["choices"][0]["message"]["content"]
+            used_model, resp = _nvidia_chat_impl(messages, stream=False)
+            result = json.loads(resp.read())
+            resp.close()
+            return result["choices"][0]["message"]["content"]
         except Exception as e:
             return f"عذراً، حدث خطأ: {str(e)[:100]}"
 
@@ -273,6 +300,42 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return result.get("text", "")
         except:
             return ""
+
+def _nvidia_models():
+    """قائمة الموديلات بترتيب الأفضلية: الأساسي ثم البدائل (بدون تكرار)."""
+    seen = []
+    for mdl in [NVIDIA_MODEL] + list(NVIDIA_FALLBACKS):
+        if mdl and mdl not in seen:
+            seen.append(mdl)
+    return seen
+
+
+def _nvidia_chat_impl(messages, stream=True, temperature=None, top_p=None, max_tokens=None):
+    """يرسل الرسائل لأول موديل متاح (الأساسي ثم البدائل).
+    يعيد (اسم الموديل، كائن الا�اجابة)، أو يثير استثناءً لو فشلت كلها."""
+    last_err = None
+    for model in _nvidia_models():
+        payload = {"model": model, "messages": messages, "stream": stream}
+        if temperature is not None:
+            payload["temperature"] = temperature
+        if top_p is not None:
+            payload["top_p"] = top_p
+        if max_tokens is not None:
+            payload["max_tokens"] = max_tokens
+        payload.update(NVIDIA_EXTRA)
+        try:
+            req = urllib.request.Request(NVIDIA_URL, data=json.dumps(payload).encode("utf-8"), method="POST")
+            req.add_header("Authorization", "Bearer " + NVIDIA_API_KEY)
+            req.add_header("Content-Type", "application/json")
+            req.add_header("Accept", "text/event-stream")
+            resp = urllib.request.urlopen(req, timeout=60)
+            return model, resp
+        except Exception as e:
+            last_err = e
+            continue
+    raise RuntimeError("NVIDIA models failed: " + str(last_err))
+
+
 
 class ThreadedServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
     daemon_threads = True
