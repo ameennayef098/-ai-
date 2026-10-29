@@ -3812,10 +3812,18 @@
     // إذا كنا داخل ركن: أضف معلوماته الحقيقية للنظام حتى يجيب من المصدر لا من الذاكرة
     var sysContent = SYSTEM;
     if (currentCorner && currentCorner.full) {
-      sysContent += '\n=== الركن الحالي: ' + currentCorner.title + ' ===\n' +
-        'المنفّذون: ' + currentCorner.authors.join('، ') + '\n' +
-        currentCorner.full +
-        '\n(أجب من هذه المعلومات فقط. اذكر كل الأسماء عند السؤال عن المنفّذين.)';
+      if (currentCorner.id === 'smart-devices') {
+        // ركن أمان الأجهزة الذكية: اسمح بالإجابة على أسئلة الأمن السيبراني العامة
+        sysContent += '\n=== الركن الحالي: ' + currentCorner.title + ' ===\n' +
+          'المنفّذون: ' + currentCorner.authors.join('، ') + '\n' +
+          currentCorner.full +
+          '\n(يمكنك الإجابة على أسئلة الأمن السيبراني العامة أيضاً، مع استخدام معلومات هذا الركن كمرجع. اذكر كل الأسماء عند السؤال عن المنفّذين.)';
+      } else {
+        sysContent += '\n=== الركن الحالي: ' + currentCorner.title + ' ===\n' +
+          'المنفّذون: ' + currentCorner.authors.join('، ') + '\n' +
+          currentCorner.full +
+          '\n(أجب من هذه المعلومات فقط. اذكر كل الأسماء عند السؤال عن المنفّذين.)';
+      }
     }
 
     // شبكة أمان: أي اسم تقني أو لغة أجنبية تسرّب من الرد تُنظَّف
