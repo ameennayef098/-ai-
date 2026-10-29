@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Backup files
+backup-*/
+*.bak
+*.tmp
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# TTS cache (temporary audio files)
+arkan-ai/tts/*.mp3
+
+# Audio uploads (visitor recordings)
+arkan-ai/audio/*.webm
+arkan-ai/audio/*.ogg
+arkan-ai/audio/*.mp3
+
+# Sensitive data (never commit)
+*.env
+.env
+
+# Note: server.py is now safe to deploy (API keys read from environment variables)
